@@ -50,7 +50,7 @@ class Newsletter(commands.Cog):
             response = "\n".join(f"{resource.id}: {resource.url}" for resource in resources)
         else:
             response = "No resources found."
-        await interaction.response.send_message(response, ephemeral=True)
+        await interaction.response.send_message(response)
 
 
 def setup(bot):
