@@ -3,8 +3,17 @@ from nextcord.ext import commands
 import os
 import json
 from dotenv import load_dotenv
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
+from models.models import Base
 
 load_dotenv()
+DATABASE_URL = os.getenv('DATABASE_URL')
+
+engine = create_engine(DATABASE_URL)
+Session = sessionmaker(bind=engine)
+
+Base.metadata.create_all(engine)
 
 with open('config/config.json') as config_file:
     config = json.load(config_file)

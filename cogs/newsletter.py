@@ -2,11 +2,13 @@ from nextcord.ext import commands
 import nextcord
 import feedparser
 from datetime import datetime, timedelta
+from utils.newsletter_utils import NewsletterUtils
 
 
 class Newsletter(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
+        self.newsletter_utils = NewsletterUtils()
         self.RSS_URLS = ['https://careercutler.substack.com/feed', 'https://www.developing.dev/feed',
                          'https://levelupsoftwareengineering.substack.com/feed', 'https://read.engineerscodex.com/feed',
                          'https://codingchallenges.substack.com/feed', 'https://blog.dataengineer.io/feed',
@@ -40,6 +42,15 @@ class Newsletter(commands.Cog):
             await interaction.followup.send("Here are the latest articles from the feeds.", ephemeral=True)
         else:
             await interaction.followup.send("No new articles in the last 24 hours.")
+
+    @nextcord.slash_command(name="list_newsletter_resources", description="List all newsletter resources.")
+    async def list_newsletter_resources(self, interaction: nextcord.Interaction):
+        resources = self.newsletter_utils.list_resources()
+        if resources:
+            response = "\n".join(f"{resource.id}: {resource.url}" for resource in resources)
+        else:
+            response = "No resources found."
+        await interaction.response.send_message(response, ephemeral=True)
 
 
 def setup(bot):
