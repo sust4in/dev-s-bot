@@ -6,7 +6,7 @@ class NewsletterUtils:
     def __init__(self):
         self.db = Session()
 
-    def list_resources(self):
+    def get_resources(self):
         try:
             resources = self.db.query(NewsletterResources).all()
             return resources

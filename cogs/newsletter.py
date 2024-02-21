@@ -9,22 +9,12 @@ class Newsletter(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.newsletter_utils = NewsletterUtils()
-        self.RSS_URLS = ['https://careercutler.substack.com/feed', 'https://www.developing.dev/feed',
-                         'https://levelupsoftwareengineering.substack.com/feed', 'https://read.engineerscodex.com/feed',
-                         'https://codingchallenges.substack.com/feed', 'https://blog.dataengineer.io/feed',
-                         'https://newsletter.techleadmentor.com/feed', 'https://www.thecaringtechie.com/feed',
-                         'https://refactoring.fm/feed', 'https://strategizeyourcareer.substack.com/feed',
-                         'https://www.saiyangrowthletter.com/feed', 'https://tidyfirst.substack.com/feed',
-                         'https://devinterrupted.substack.com/feed', 'https://newsletter.pragmaticengineer.com/feed',
-                         'https://changelog.com/news/feed', 'https://newsletter.weskao.com/feed',
-                         'https://newsletter.systemdesign.one/feed', 'https://blog.bytebytego.com/feed',
-                         'https://bytesizeddesign.substack.com/feed', 'https://newsletter.francofernando.com/feed',
-                         'https://sreweekly.com/feed/']
 
     async def fetch_rss_items(self):
         items = []
-        for url in self.RSS_URLS:
-            feed = feedparser.parse(url)
+        rss_records = self.newsletter_utils.get_resources()
+        for rss_record in rss_records:
+            feed = feedparser.parse(rss_record.url)
             for entry in feed.entries:
                 published_date = datetime(*entry.published_parsed[:6])
                 if datetime.now() - published_date < timedelta(days=1):
@@ -45,7 +35,7 @@ class Newsletter(commands.Cog):
 
     @nextcord.slash_command(name="list_newsletter_resources", description="List all newsletter resources.")
     async def list_newsletter_resources(self, interaction: nextcord.Interaction):
-        resources = self.newsletter_utils.list_resources()
+        resources = self.newsletter_utils.get_resources()
         if resources:
             response = "\n".join(f"{resource.id}: {resource.url}" for resource in resources)
         else:
