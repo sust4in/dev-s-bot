@@ -12,19 +12,19 @@ class Newsletter(commands.Cog):
 
     async def fetch_rss_items(self):
         items = []
-        rss_records = self.newsletter_utils.get_resources()
-        for rss_record in rss_records:
-            feed = feedparser.parse(rss_record.url)
-            for entry in feed.entries:
-                published_date = datetime(*entry.published_parsed[:6])
-                if datetime.now() - published_date < timedelta(days=1):
-                    items.append((entry.title, entry.link))
+        response = self.newsletter_utils.get_resources()
+        if response['status'] == 'ok' and response['data']:
+            for rss_record in response['data']:
+                feed = feedparser.parse(rss_record.url)
+                for entry in feed.entries:
+                    published_date = datetime(*entry.published_parsed[:6])
+                    if datetime.now() - published_date < timedelta(days=1):
+                        items.append((entry.title, entry.link))
         return items
 
     @nextcord.slash_command(name="newsletter", description="Get the latest articles from our feeds")
     async def newsletter(self, interaction: nextcord.Interaction):
         await interaction.response.defer()
-
         items = await self.fetch_rss_items()
         if items:
             for title, link in items:
@@ -35,12 +35,28 @@ class Newsletter(commands.Cog):
 
     @nextcord.slash_command(name="list_newsletter_resources", description="List all newsletter resources.")
     async def list_newsletter_resources(self, interaction: nextcord.Interaction):
-        resources = self.newsletter_utils.get_resources()
-        if resources:
-            response = "\n".join(f"{resource.id}: {resource.url}" for resource in resources)
+        response = self.newsletter_utils.get_resources()
+        if response['status'] == 'ok' and response['data']:
+            resources_list = "\n".join(f"{resource.id}: {resource.url}" for resource in response['data'])
+            await interaction.response.send_message(resources_list or "No resources found.")
         else:
-            response = "No resources found."
-        await interaction.response.send_message(response)
+            await interaction.response.send_message("Failed to retrieve resources.")
+
+    @nextcord.slash_command(name="add_newsletter_resource", description="Add a new newsletter resource.")
+    async def add_newsletter_resource(self, interaction: nextcord.Interaction, url: str):
+        response = self.newsletter_utils.create_resource(url)
+        if response['status'] == 'ok':
+            await interaction.response.send_message(response['message'])
+        else:
+            await interaction.response.send_message(response['message'])
+
+    @nextcord.slash_command(name="update_newsletter_resource", description="Update an existing newsletter resource.")
+    async def update_newsletter_resource(self, interaction: nextcord.Interaction, resource_id: int, new_url: str):
+        response = self.newsletter_utils.update_resource(resource_id, new_url)
+        if response['status'] == 'ok':
+            await interaction.response.send_message(response['message'])
+        else:
+            await interaction.response.send_message(response['message'], ephemeral=True)
 
 
 def setup(bot):
